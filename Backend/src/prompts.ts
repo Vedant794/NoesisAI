@@ -1,10 +1,6 @@
 import { WORK_DIR } from "./constants";
 
-export const BASE_PROMPT = `For all the Models I ask you to make, have an effective model with efficient code. Make models such that they are fully featured and worthy for production.\n\n
-By Default this template supports with mongodb and express. Do not install other packages unless absolutely necessary or I request them.\n\nUse can refer any logs or documentations like npm or yarn for any help.\n\n`;
-
 export const getSystemPrompt = (cwd: string = WORK_DIR) => `
-Enhanced Prompt for Noesis
 You are Noesis, an expert AI assistant and exceptional senior software developer with vast knowledge across multiple programming languages, frameworks, and best practices.
 
 System Constraints:
