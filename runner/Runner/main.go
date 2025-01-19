@@ -4,22 +4,28 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type App struct {
 	dockerConn *client.Client
 	Router     *gin.Engine
+	Network    string
 }
 
 /* This method initializes the gin router and also connects to the dockers socket
@@ -52,21 +58,30 @@ func (app *App) handleDeploy(c *gin.Context) {
 	path := "/home/shreyash/Desktop/test(2)/test/"
 
 	// Build Docker image
-	app.createImage(path)
+	imageName := app.createImage(path)
 
 	// Launch the container
-	app.launchContainer("node1s-app:latest")
+	containerId, url := app.launchContainer(imageName)
+
+	//clearnup after a fixed timeout
+	go func() {
+		time.Sleep(1 * time.Minute)
+		app.handleCleanUp(imageName, containerId)
+	}()
 
 	c.JSON(200, gin.H{
-		"message": "Application deployed successfully!",
+		"message": url,
 	})
 }
 
 /* thos method creates the image on providing the path of the code
  */
-func (app *App) createImage(path string) {
+func (app *App) createImage(path string) string {
 	var buf bytes.Buffer
 	tw := tar.NewWriter(&buf)
+
+	//Image name
+	ImageName := uuid.New()
 
 	// Define the Dockerfile
 	dockerfile := `
@@ -100,7 +115,7 @@ CMD ["node", "index.js"]`
 		context.Background(),
 		&buf,
 		types.ImageBuildOptions{
-			Tags:       []string{"node1s-app:latest"},
+			Tags:       []string{string(ImageName.String())},
 			Dockerfile: "Dockerfile",
 			Remove:     true,
 		},
@@ -117,32 +132,47 @@ CMD ["node", "index.js"]`
 		log.Fatalf("Error reading build output: %v", err)
 	}
 	log.Println("Image built successfully!")
+
+	//returning the image name
+	return ImageName.String()
 }
 
 /* launching the docker container on providing the image it also connect to the traffic label for reverse proxy
  */
-func (app *App) launchContainer(imageName string) {
+func (app *App) launchContainer(imageName string) (string, string) {
+
+	host := fmt.Sprintf("Host(`%s-node1s.localhost`)", imageName)
+	url := fmt.Sprintf("%s-node1s.localhost", imageName)
+	containerName := imageName
+
+	rule_pathprefix := fmt.Sprintf("traefik.http.routers.%s.rule", containerName)
+	//rule_middleware:=fmt.Sprintf("traefik.http.routers.%s.middlewares",containerName)
+	//rule_remove_middleware:=fmt.Sprintf("traefik.http.middlewares.remove-%s.stripprefix.prefixes",containerName)
+	rule_loadbalance := fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port")
+
+	// container configuration
 	resp, err := app.dockerConn.ContainerCreate(
 		context.Background(),
 		&container.Config{
 			Image: imageName,
 			Labels: map[string]string{
-				"traefik.enable":                                        "true",
-				"traefik.http.routers.nodejs.rule":                      "Host(`node1s.localhost`)",
-				"traefik.http.services.nodejs.loadbalancer.server.port": "3000",
+				"traefik.enable": "true", //enable traefik
+				rule_pathprefix:  host,   //pathprefix
+				rule_loadbalance: "3000", //loadbalancing to port 3000
 			},
 		},
 		&container.HostConfig{
-			NetworkMode: "trafiektest_default", // Connect to the desired network
+			NetworkMode: container.NetworkMode(app.Network), // Connect to the desired network
 		},
 		&network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{
 				"trafiektest_default": {}, // Attach to the specific network
 			},
 		},
-		nil,                    // Platform
-		"nodejs-app-container", // Container name
+		nil,           // Platform
+		containerName, // Container name
 	)
+
 	if err != nil {
 		log.Fatalf("Error creating container: %v", err)
 	}
@@ -154,6 +184,10 @@ func (app *App) launchContainer(imageName string) {
 
 	log.Printf("Container started successfully with ID: %s\n", resp.ID)
 	log.Println("Your application is running, and Traefik should route traffic based on the configured labels.")
+
+	//returning the cotnainer id
+	containerId := resp.ID
+	return containerId, url
 }
 
 /*adding the file to tar because docker need it
@@ -206,9 +240,40 @@ func addDirectoryToTar(tw *tar.Writer, path string) error {
 	})
 }
 
+/*clean up funcion which delete the container and the image as well
+ */
+func (app *App) handleCleanUp(imageName string, containerId string) {
+	ctx := context.Background()
+
+	//stopping the container
+	err := app.dockerConn.ContainerStop(ctx, containerId, container.StopOptions{})
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(fmt.Sprintf("stopped the container with id %s", containerId))
+
+	//removing the container
+	err = app.dockerConn.ContainerRemove(ctx, containerId, container.RemoveOptions{})
+	if err != nil {
+		log.Println(err)
+	}
+	log.Println(fmt.Sprintf("removed the container with id %s", containerId))
+
+	//deleting the image
+	_, err = app.dockerConn.ImageRemove(ctx, imageName, image.RemoveOptions{})
+	if err != nil {
+		fmt.Println(err)
+	}
+	log.Println(fmt.Sprintf(" removed the image with name:-%s", imageName))
+
+}
+
 /*main function
  */
 func main() {
-	app := &App{}
+
+	network := flag.String("network", "trafiektest_default", "Specify the network name")
+
+	app := &App{Network: *network}
 	app.initialize()
 }
