@@ -1,0 +1,40 @@
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Editor from "@monaco-editor/react";
+import axios from "axios";
+import { ArrowLeft, FileCode, Terminal } from "lucide-react";
+import { cleanResponse } from "./Helpers/Cleaner";
+import { responseFormat } from "./Helpers/responseFormat";
+
+interface FileContent {
+  filepath: string;
+  content: string;
+}
+
+function GeneratePage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const prompt = location.state?.prompt || "";
+  const [LlmResponse, setLlmResponse] = useState<FileContent[]>([]);
+
+  async function init() {
+    try {
+      // const response = await axios.post("http://localhost:3000/chats", {
+      //   messages: prompt,
+      // });
+      const response = responseFormat;
+      const cleanJson = cleanResponse(JSON.stringify(response));
+      const final = cleanJson.replace(/;/g, ";\\n");
+      console.log("Final:", final);
+      const promptResponse = JSON.parse(final);
+      console.log(typeof promptResponse.output);
+      setLlmResponse(promptResponse.output);
+      // console.log("Clean Response:", typeof JSON.parse(cleanJson));
+    } catch (error) {
+      console.error("Error in init:", error);
+    }
+  }
+
+  useEffect(() => {
+    init();
+  }, []);
