@@ -36,6 +36,7 @@ IMPORTANT:- Always try to use async/await for all the asynchronous functions.
 IMPORTANT:- If you required to mentioned any error message, always try to mention the error message in the console.error().
 IMPORTANT:- Always try to use the latest version of the packages and libraries.
 IMPORTANT:- Always try to write the promises in try-catch block.
+IMPORTANT:- By Default if User don't provide the port number in .env file then use 3000 as a default port always.Don't use any other default port
 
 Project Folder Structure Format
 You are tasked with creating a project structure that adheres to the following folder and file hierarchy:
@@ -66,9 +67,11 @@ Edit
       },
       "files": ["app.js", "server.js"]
     },
-    "files": [".env"]
+    "files": [".env", "package.json"]
   }
 }
+
+Follow the above folder structure to generate output
 Output Format
 All responses should include a JSON object where each object specifies:
 
@@ -82,34 +85,13 @@ Edit
 {
   "output": [
   {
-  src:{
-    config:[{
-      fileName:database.js,
-      content:const mongoose = require('mongoose');......
+      "filepath": "/src/config/database.js",
+      "content": "const mongoose = require('mongoose');\nconst connectDB = async () => { await mongoose.connect(process.env.MONGO_URI); };\nmodule.exports = connectDB;"
     },
     {
-    filename:dotenv.js,
-    content:require('dotenv').config();......
-    }],
-    models:[
-      {
-        filename:foodModel.js,
-        content: const mongoose......
-      }
-    ]
-  },
-  {
-    filename:app.js,
-    content:"..."
-  },{
-    filename:.env,
-    content: " API_KEY= "",
-  },
-  {
-    filename:package.json,
-    content:...
-  }
-  }
+      "filepath": "/src/models/user.model.js",
+      "content": "const mongoose = require('mongoose');\nconst userSchema = new mongoose.Schema({ name: String, email: String });\nmodule.exports = mongoose.model('User', userSchema);"
+    }
 ]
 }
 
