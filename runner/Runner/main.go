@@ -172,44 +172,32 @@ CMD ["node", "index.js"]`
 func (app *App) launchContainer(imageName string) (string, string, error) {
 
 	//host := fmt.Sprintf("Host(`%s-node1s.localhost`)", imageName)
-	host := fmt.Sprintf("PathPrefix(`/%s`)", imageName)
 	url := fmt.Sprintf("/%s", imageName)
 	containerName := imageName
-
-	rule_pathprefix := fmt.Sprintf("traefik.http.routers.%s.rule=%s", containerName, host)
-	mid := fmt.Sprintf("remove-%s", containerName)
-
-	rule_middleware := fmt.Sprintf("traefik.http.routers.%s.middlewares=%s", containerName, mid)
-
+	host := fmt.Sprintf("PathPrefix(`/%s`)", imageName)
 	rm_mid := fmt.Sprintf("/%s", containerName)
-	rule_remove_middleware := fmt.Sprintf("traefik.http.middlewares.remove-%s.stripprefix.prefixes=%s", containerName, rm_mid)
 
-	rule_loadbalance := fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port=3000", containerName)
+	labels := map[string]string{
+		"traefik.enable": "true", // Enable Traefik
+		fmt.Sprintf("traefik.http.routers.%s.rule", containerName):                            host,
+		fmt.Sprintf("traefik.http.routers.%s.middlewares", containerName):                     fmt.Sprintf("remove-%s", containerName),
+		fmt.Sprintf("traefik.http.middlewares.remove-%s.stripprefix.prefixes", containerName): rm_mid,
+		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", containerName):       "3000",
+	}
 
-	fmt.Println(rule_pathprefix)
-	fmt.Println(rule_middleware)
-	fmt.Println(rule_remove_middleware)
-	fmt.Println(rule_loadbalance)
-
-	// container configuration
+	// Container configuration
 	resp, err := app.dockerConn.ContainerCreate(
 		context.Background(),
 		&container.Config{
-			Image: imageName,
-			Labels: map[string]string{
-				"traefik.enable":       "true", //enable traefik
-				rule_pathprefix:        host,   //pathprefix
-				rule_middleware:        mid,    //added the middleware
-				rule_loadbalance:       "3000", //loadbalancing to port 3000
-				rule_remove_middleware: rm_mid, //remove the middleware
-			},
+			Image:  imageName,
+			Labels: labels, // Pass the corrected labels map
 		},
 		&container.HostConfig{
 			NetworkMode: container.NetworkMode(app.Network), // Connect to the desired network
 		},
 		&network.NetworkingConfig{
 			EndpointsConfig: map[string]*network.EndpointSettings{
-				"trafiektest_default": {}, // Attach to the specific network
+				app.Network: {}, // Attach to the specific network
 			},
 		},
 		nil,           // Platform
