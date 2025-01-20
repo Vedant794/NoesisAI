@@ -1,82 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import FileExplorer from "./FileExplorer";
 import CodeEditor from "./CodeEditor";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { cleanResponse } from "./Helpers/Cleaner";
-
-type FileData = {
-  filepath: string;
-  content: string;
-};
-
-// const jsonResponse = {
-//   output: [
-//     {
-//       filepath: "src/config/database.js",
-//       content:
-//         "const mongoose = require('mongoose');\nconst database = () => {  mongoose.connect('mongodb://localhost/todo', {    useNewUrlParser: true,     useUnifiedTopology: true,    useFindAndModify: false,    useCreateIndex: true  });\n};\nmodule.exports = database;\n",
-//     },
-//     {
-//       filepath: "src/config/dotenv.js",
-//       content: "require('dotenv').config();\n",
-//     },
-//     {
-//       filepath: "src/models/user.model.js",
-//       content:
-//         "const mongoose = require('mongoose');\nconst userSchema = new mongoose.Schema({  name: {    type: String,    required: true  },  email: {    type: String,    required: true,    unique: true  },  password: {    type: String,    required: true  }});\nconst User = mongoose.model('User', userSchema);\nmodule.exports = User;\n",
-//     },
-//     {
-//       filepath: "src/models/product.model.js",
-//       content:
-//         "const mongoose = require('mongoose');\nconst productSchema = new mongoose.Schema({  name: {    type: String,    required: true  },  price: {    type: Number,    required: true  },  description: {    type: String,    required: true  }});\nconst Product = mongoose.model('Product', productSchema);\nmodule.exports = Product;\n",
-//     },
-//     {
-//       filepath: "src/controllers/user.controller.js",
-//       content:
-//         "const User = require('../models/user.model');\nconst createUser = async (req, res) => {  try {    const user = new User(req.body);\n    await user.save();\n    res.status(201).json({ message: 'User created successfully' });\n  } catch (error) {    console.error(error);\n    res.status(500).json({ error: 'An error occurred while creating the user' });\n  }};\nconst findUser = async (req, res) => {  try {    const user = await User.findById(req.params.id);\n    if (!user) {      return res.status(404).json({ error: 'User not found' });\n    }    res.json(user);\n  } catch (error) {    console.error(error);\n    res.status(500).json({ error: 'An error occurred while finding the user' });\n  }};\nmodule.exports = {  createUser,   findUser};\n",
-//     },
-//     {
-//       filepath: "src/controllers/product.controller.js",
-//       content:
-//         "const Product = require('../models/product.model');\nconst createProduct = async (req, res) => {  try {    const product = new Product(req.body);\n    await product.save();\n    res.status(201).json({ message: 'Product created successfully' });\n  } catch (error) {    console.error(error);\n    res.status(500).json({ error: 'An error occurred while creating the product' });\n  }};\nconst findProduct = async (req, res) => {  try {    const product = await Product.findById(req.params.id);\n    if (!product) {      return res.status(404).json({ error: 'Product not found' });\n    }    res.json(product);\n  } catch (error) {    console.error(error);\n    res.status(500).json({ error: 'An error occurred while finding the product' });\n  }};\nmodule.exports = {  createProduct,   findProduct};\n",
-//     },
-//     {
-//       filepath: "src/routes/user.routes.js",
-//       content:
-//         "const express = require('express');\nconst userController = require('../controllers/user.controller');\nconst router = express.Router();\nrouter.post('/', userController.createUser);\nrouter.get('/:id', userController.findUser);\nmodule.exports = router;\n",
-//     },
-//     {
-//       filepath: "src/routes/product.routes.js",
-//       content:
-//         "const express = require('express');\nconst productController = require('../controllers/product.controller');\nconst router = express.Router();\nrouter.post('/', productController.createProduct);\nrouter.get('/:id', productController.findProduct);\nmodule.exports = router;\n",
-//     },
-//     {
-//       filepath: "src/services/user.service.js",
-//       content:
-//         "const User = require('../models/user.model');\nconst createUser = async (userData) => {  const user = new User(userData);\n  return user.save();\n};\nconst findUser = async (userId) => {  return User.findById(userId);\n};\nmodule.exports = {  createUser,   findUser};\n",
-//     },
-//     {
-//       filepath: "src/services/email.service.js",
-//       content:
-//         "const sendEmail = async (emailData) => {  // Add email sending logic here};\nmodule.exports = {  sendEmail};\n",
-//     },
-//     {
-//       filepath: "src/middlewares/error.middleware.js",
-//       content:
-//         "const errorHandler = (err, req, res, next) => {  console.error(err);\n  res.status(500).json({ error: 'An error occurred' });\n};\nmodule.exports = errorHandler;\n",
-//     },
-//     {
-//       filepath: "src/app.js",
-//       content:
-//         "const express = require('express');\nconst userRoutes = require('./routes/user.routes');\nconst productRoutes = require('./routes/product.routes');\nconst errorMiddleware = require('./middlewares/error.middleware');\nconst app = express();\napp.use(express.json());\napp.use('/api/users', userRoutes);\napp.use('/api/products', productRoutes);\napp.use(errorMiddleware);\nmodule.exports = app;\n",
-//     },
-//     {
-//       filepath: ".env",
-//       content: "MONGO_URI=mongodb://localhost/todoAPI_KEY=your_api_key",
-//     },
-//   ],
-// };
 
 interface FileDataResponse {
   filepath: string;
@@ -103,11 +30,12 @@ function App() {
       const response = await axios.post("http://localhost:3000/chats", {
         messages: prompt,
       });
-      const cleanJson = cleanResponse(JSON.stringify(response.data.Content));
+      // console.log(response.data.Content);
+      const cleanJson = cleanResponse(response.data.Content);
       // console.log(cleanJson);
-      const final = cleanJson.replace(/;/g, ";\\n");
+      // const final = cleanJson.replace(/;/g, ";\\n");
       // console.log(final);
-      setJsonResponse(JSON.parse(final));
+      setJsonResponse(JSON.parse(cleanJson));
     } catch (error: any) {
       console.error("Something related to the apiReasponse", error);
     }
