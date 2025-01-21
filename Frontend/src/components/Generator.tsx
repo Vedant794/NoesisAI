@@ -30,7 +30,7 @@ function App() {
       const response = await axios.post("http://localhost:3000/chats", {
         messages: prompt,
       });
-      // console.log(response.data.Content);
+      console.log(response.data.Content);
       const cleanJson = cleanResponse(response.data.Content);
       // console.log(cleanJson);
       // const final = cleanJson.replace(/;/g, ";\\n");

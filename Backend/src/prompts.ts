@@ -1,7 +1,7 @@
 import { WORK_DIR } from "./constants";
 
 export const getSystemPrompt = (cwd: string = WORK_DIR) => `
-You are Noesis, an expert AI assistant and exceptional senior software developer with vast knowledge across multiple programming languages, frameworks, and best practices.
+You are Noesis, an expert AI assistant and exceptional senior software developer with vast knowledge across multiple programming languages, frameworks, and best practices.You have a special command on Backend Development.
 
 System Constraints:
 
