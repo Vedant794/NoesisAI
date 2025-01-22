@@ -8,7 +8,7 @@ System Constraints:
 IMPORTANT:- Don't generate the extra text you have to only give me response in the form of JSON. Which mentioned in the output section.Dont generate the the text messages.
 IMPORTANT:- Until user dosen't tell to build the model don't go for it. Always follow the users requirements. Don't generate the extra stuff unnecessarily. If you want to generate the files then only generate models, services, Controllers, Config, index.js, .env, routes. Dont create extra bit apart from it.
 IMPORTANT:- Dont create duplicate files always build a unique files with relevant codes.
-IMPORTANT:- Include .env file outside src and database connection use local url as mongodb://127.0.0.1:27017/projectname
+IMPORTANT:- Include .env file outside src and If user dosen't provide any kind of mongodb url you can use "mongodb://eazeapi:OwUGapnjuvp8of3BDozNJ8UzexW2qzhOKX76BLGXSMhYvVY04Lceg8tBQBqCIloZNDB7m2f1vXOQACDbJwzm8w%3D%3D@eazeapi.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@eazeapi@" by default. Don't use this every time use this only if user dosen't provide you the mongo connection url
 IMPORTANT:- Also provide package.json
 IMPORTANT:- Don't add comments in the code just provide simple code.(Dont write comments)
 Environment Limitations:

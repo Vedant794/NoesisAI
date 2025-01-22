@@ -21,21 +21,38 @@ function App() {
     path: string;
     content: string;
   } | null>(null);
+  const [url, setUrl] = useState<string>("");
+  const [json, setJson] = useState<jsonResponseType>();
+  const [active, setActive] = useState(false);
   const [jsonResponse, setJsonResponse] = useState<jsonResponseType>({
     output: [],
   });
+
+  async function generateTestingUrl() {
+    try {
+      const response = await axios.post("http://localhost:3000/generateurl", {
+        code: json,
+      });
+      console.log(response.data);
+      setUrl(`20.244.37.45/${response.data.message}`);
+    } catch (error: any) {
+      throw Error(`Takniki Kharabi hai thoda sabar karo: ${error}`);
+    }
+  }
 
   async function init() {
     try {
       const response = await axios.post("http://localhost:3000/chats", {
         messages: prompt,
       });
-      console.log(response.data.Content);
+      // console.log(response.data.Content);
       const cleanJson = cleanResponse(response.data.Content);
-      // console.log(cleanJson);
+      console.log(cleanJson);
       // const final = cleanJson.replace(/;/g, ";\\n");
       // console.log(final);
+      setJson(JSON.parse(cleanJson));
       setJsonResponse(JSON.parse(cleanJson));
+      // console.log(jsonResponse);
     } catch (error: any) {
       console.error("Something related to the apiReasponse", error);
     }
@@ -118,6 +135,36 @@ function App() {
               ))}
             </div>
           </div>
+        </div>
+        <div className="ouputSection mt-3 text-center">
+          {url.length > 0 ? (
+            <div>
+              <span className="text-xl text-slate-100 font-serif">{url}</span>
+              <button
+                className="text-white rounded-lg bg-blue-500 hover:bg-blue-700 px-4 py-2 h-[4vh] w[50%] text-lg font-mono"
+                onClick={async () => await navigator.clipboard.writeText(url)}
+              >
+                Copy Url
+              </button>
+            </div>
+          ) : (
+            <></>
+          )}
+          {active ? (
+            <h1 className="text-xl font-mono text-white">Loading.....</h1>
+          ) : (
+            <></>
+          )}
+          <button
+            className={`h-[6vh] w-[80%] px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-700 text-slate-100 disabled:${
+              url.length > 0
+            }`}
+            onClick={() => {
+              generateTestingUrl(), setActive(true);
+            }}
+          >
+            Generate Url to test the Api
+          </button>
         </div>
       </div>
 
