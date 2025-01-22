@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -118,7 +119,7 @@ WORKDIR /app
 COPY . .
 RUN npm install
 EXPOSE 3000
-CMD ["node", "index.js"]`
+CMD ["node", "./src/index.js"]`
 
 	// Add Dockerfile to tar
 	err := addFileToTar(tw, "Dockerfile", dockerfile)
@@ -171,9 +172,13 @@ CMD ["node", "index.js"]`
  */
 func (app *App) launchContainer(imageName string) (string, string, error) {
 
-	//host := fmt.Sprintf("Host(`%s-node1s.localhost`)", imageName)
+	//url to send to the user
 	url := fmt.Sprintf("/%s", imageName)
+
+	//name of the container same as imagename for easier refernce
 	containerName := imageName
+
+	//host rule value
 	host := fmt.Sprintf("PathPrefix(`/%s`)", imageName)
 	rm_mid := fmt.Sprintf("/%s", containerName)
 
@@ -212,7 +217,7 @@ func (app *App) launchContainer(imageName string) (string, string, error) {
 	err = app.dockerConn.ContainerStart(context.Background(), resp.ID, container.StartOptions{})
 	if err != nil {
 		log.Fatalf("Error starting container: %v", err)
-		return "", "", err
+		return "", "", errors.New("error starting the container")
 	}
 
 	log.Printf("Container started successfully with ID: %s\n", resp.ID)
@@ -220,6 +225,37 @@ func (app *App) launchContainer(imageName string) (string, string, error) {
 
 	//returning the cotnainer id
 	containerId := resp.ID
+
+	//waiting for a second to see if the container doesnt exited
+	time.Sleep(1 * time.Second)
+
+	containerJSON, err := app.dockerConn.ContainerInspect(context.Background(), containerId)
+	if err != nil {
+		log.Println("Error inspecting container: %v", err)
+	}
+
+	// Check the container's status
+	if containerJSON.State.Status == "exited" {
+
+		logs, err := app.dockerConn.ContainerLogs(context.Background(), containerId, container.LogsOptions{
+			ShowStdout: true,
+			ShowStderr: true,
+			Follow:     false,
+		})
+		if err != nil {
+			log.Println("Error fetching logs: %v", err)
+		}
+		defer logs.Close()
+		fmt.Println("Container Logs:")
+		logData, err := io.ReadAll(logs) // Read all logs at once
+		if err != nil {
+			log.Fatalf("Error reading logs: %v", err)
+		}
+
+		go app.handleCleanUp(imageName, containerId) //cleanup this failed container for now
+		return "", "", errors.New(fmt.Sprintf("error occured on running the code:- %s", string(logData)))
+	}
+
 	return containerId, url, nil
 }
 
@@ -357,6 +393,7 @@ func (app *App) handleCreateCode(c *gin.Context) {
 		})
 		return
 	}
+	fmt.Println(output)
 
 	// Call createCode
 	workingpath, err := createCode(output)
@@ -391,13 +428,14 @@ func (app *App) handleCreateCode(c *gin.Context) {
 
 	log.Printf("Container launched: ID=%s, URL=%s", containerId, url)
 
+	//delete the files
 	go func() {
 		deleteFilesInDir(workingpath)
 	}()
 
 	// Cleanup after a fixed timeout
 	go func() {
-		time.Sleep(1 * time.Minute)
+		time.Sleep(5 * time.Minute)
 		app.handleCleanUp(imageName, containerId)
 
 	}()
@@ -408,7 +446,11 @@ func (app *App) handleCreateCode(c *gin.Context) {
 	})
 }
 
-// delte the crated files
+/*
+	clean up function to delete all the required files
+
+it delete the files based on the path
+*/
 func deleteFilesInDir(path string) error {
 	// Open the directory
 	err := os.RemoveAll(path)
