@@ -66,8 +66,11 @@ func (app *App) initialize() {
 	// route to handle request
 	app.Router.POST("/deploy", app.handleTestDeploy)
 
+	//route to read the container logs
 	app.Router.POST("/create-code", app.handleCreateCode)
 
+	//
+	app.Router.GET("/logs/:container_id", app.readContainerLogs)
 	log.Println("Server is running on http://localhost:9000")
 	log.Fatal(app.Router.Run(":9000"))
 }
@@ -124,19 +127,19 @@ CMD ["node", "./src/index.js"]`
 	// Add Dockerfile to tar
 	err := addFileToTar(tw, "Dockerfile", dockerfile)
 	if err != nil {
-		log.Fatalf("Error adding Dockerfile to tar: %v", err)
+		log.Println(fmt.Printf("Error adding Dockerfile to tar: %v", err))
 	}
 
 	// Add application files to tar
 	err = addDirectoryToTar(tw, path)
 	if err != nil {
-		log.Fatalf("Error adding directory to tar: %v", err)
+		log.Println(fmt.Sprintf("Error adding directory to tar: %v", err))
 	}
 
 	// Close the tar writer
 	err = tw.Close()
 	if err != nil {
-		log.Fatalf("Error closing tar writer: %v", err)
+		log.Println(fmt.Sprintf("Error closing tar writer: %v", err))
 	}
 
 	// Build the Docker image
@@ -150,7 +153,7 @@ CMD ["node", "./src/index.js"]`
 		},
 	)
 	if err != nil {
-		log.Println("Error building image: %v", err)
+		log.Println(fmt.Sprintf("Error building image: %v", err))
 		return "", err
 	}
 	defer imageBuildResponse.Body.Close()
@@ -159,7 +162,7 @@ CMD ["node", "./src/index.js"]`
 	log.Println("Building image...")
 	_, err = io.Copy(os.Stdout, imageBuildResponse.Body)
 	if err != nil {
-		log.Fatalf("Error reading build output: %v", err)
+		log.Println(fmt.Sprintf("Error reading build output: %v", err))
 		return "", err
 	}
 	log.Println("Image built successfully!")
@@ -210,13 +213,13 @@ func (app *App) launchContainer(imageName string) (string, string, error) {
 	)
 
 	if err != nil {
-		log.Fatalf("Error creating container: %v", err)
+		log.Println(fmt.Sprintf("Error creating container: %v", err))
 		return "", "", err
 	}
 
 	err = app.dockerConn.ContainerStart(context.Background(), resp.ID, container.StartOptions{})
 	if err != nil {
-		log.Fatalf("Error starting container: %v", err)
+		log.Println(fmt.Sprintf("Error starting container: %v", err))
 		return "", "", errors.New("error starting the container")
 	}
 
@@ -231,7 +234,7 @@ func (app *App) launchContainer(imageName string) (string, string, error) {
 
 	containerJSON, err := app.dockerConn.ContainerInspect(context.Background(), containerId)
 	if err != nil {
-		log.Println("Error inspecting container: %v", err)
+		log.Println(fmt.Sprintf("Error inspecting container: %v", err))
 	}
 
 	// Check the container's status
@@ -243,13 +246,13 @@ func (app *App) launchContainer(imageName string) (string, string, error) {
 			Follow:     false,
 		})
 		if err != nil {
-			log.Println("Error fetching logs: %v", err)
+			log.Println(fmt.Sprintf("Error fetching logs: %v", err))
 		}
 		defer logs.Close()
 		fmt.Println("Container Logs:")
 		logData, err := io.ReadAll(logs) // Read all logs at once
 		if err != nil {
-			log.Fatalf("Error reading logs: %v", err)
+			log.Println(fmt.Sprintf("Error reading logs: %v", err))
 		}
 
 		go app.handleCleanUp(imageName, containerId) //cleanup this failed container for now
@@ -460,6 +463,39 @@ func deleteFilesInDir(path string) error {
 
 	fmt.Printf("Deleted directory: %s\n", path)
 	return nil
+}
+
+/*
+read the logs of the container
+*/
+func (app *App) readContainerLogs(c *gin.Context) {
+	container_id := c.Param("container_id")
+
+	//getting logs
+	logs, err := app.dockerConn.ContainerLogs(context.Background(), container_id, container.LogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:     false,
+	})
+	//if err occured reading the logs means container doest exist
+	if err != nil {
+		log.Println(fmt.Sprintf("Error fetching logs: %v", err))
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to launch container: " + err.Error(),
+		})
+		return
+	}
+
+	defer logs.Close()
+	fmt.Println("Container Logs:")
+	logData, err := io.ReadAll(logs) // Read all logs at once
+	if err != nil {
+		log.Println(fmt.Sprintf("Error reading logs: %v", err))
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"logs": logData,
+	})
+
 }
 
 /*main function
