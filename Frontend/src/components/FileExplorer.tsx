@@ -116,7 +116,7 @@ const FileExplorer: React.FC<{
   const fileTree = pathsToTree(files);
 
   return (
-    <div className="h-full bg-gray-900 rounded-lg shadow-sm">
+    <div className="h-full bg-gray-900 rounded-lg shadow-sm overflow-y-auto">
       <div className="p-3 border-b border-gray-700 bg-gray-800">
         <h2 className="font-semibold text-sm text-gray-300">
           Project Explorer

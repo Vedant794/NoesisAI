@@ -15,25 +15,27 @@ app.use(cors());
 app.post("/generateurl", async (req, res) => {
   try {
     const parseLlmResponse = await req.body;
+    console.log(1);
     if (!parseLlmResponse) {
       res.status(500).json({
         Message: "LLM chutiya hai maine aur Shreyash bhai ne kuch nahi kiya",
       });
     }
-
+    console.log(2);
     // res.json(parseLlmResponse);
-    console.log(parseLlmResponse);
+    // console.log(parseLlmResponse);
     const generatedUrl = await axios.post(
-      "http://20.244.37.45:9000/create-code",
-      {
-        parseLlmResponse,
-      }
+      "http://20.40.54.7:9000/create-code",
+      parseLlmResponse
     );
+
+    console.log(3);
     if (generatedUrl.data.error) {
       res.status(500).json({ Message: generatedUrl.data.error });
     }
 
-    console.log(generatedUrl);
+    // console.log(generatedUrl);
+    console.log(4);
 
     res.status(201).json({ url: generatedUrl.data });
   } catch (error: any) {
