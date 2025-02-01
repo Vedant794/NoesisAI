@@ -37,7 +37,8 @@ type File struct {
 }
 
 type Output struct {
-	Output []File `json:"output"`
+	Output   []File `json:"output"`
+	codetype string `json:"type"`
 }
 
 /* This method initializes the gin router and also connects to the dockers socket
@@ -84,13 +85,13 @@ func (app *App) handleTestDeploy(c *gin.Context) {
 	//path := "/home/shreyash/Desktop/test(2)/test/"
 	path := "./code/user102/"
 	// Build Docker image
-	imageName, err := app.createImage(path)
+	imageName, err := app.createImage(path, "")
 	if err != nil {
 
 	}
 
 	// Launch the container
-	containerId, url, err := app.launchContainer(imageName)
+	containerId, url, err := app.launchContainer(imageName, "")
 	if err != nil {
 
 	}
@@ -108,21 +109,12 @@ func (app *App) handleTestDeploy(c *gin.Context) {
 
 /* thos method creates the image on providing the path of the code
  */
-func (app *App) createImage(path string) (string, error) {
+func (app *App) createImage(path string, dockerfile string) (string, error) {
 	var buf bytes.Buffer
 	tw := tar.NewWriter(&buf)
 
 	//Image name
 	ImageName := uuid.New()
-
-	// Define the Dockerfile
-	dockerfile := `
-FROM node:18
-WORKDIR /app
-COPY . .
-RUN npm install
-EXPOSE 3000
-CMD ["node", "./src/index.js"]`
 
 	// Add Dockerfile to tar
 	err := addFileToTar(tw, "Dockerfile", dockerfile)
@@ -173,7 +165,7 @@ CMD ["node", "./src/index.js"]`
 
 /* launching the docker container on providing the image it also connect to the traffic label for reverse proxy
  */
-func (app *App) launchContainer(imageName string) (string, string, error) {
+func (app *App) launchContainer(imageName string, port string) (string, string, error) {
 
 	//url to send to the user
 	url := fmt.Sprintf("/%s", imageName)
@@ -190,7 +182,7 @@ func (app *App) launchContainer(imageName string) (string, string, error) {
 		fmt.Sprintf("traefik.http.routers.%s.rule", containerName):                            host,
 		fmt.Sprintf("traefik.http.routers.%s.middlewares", containerName):                     fmt.Sprintf("remove-%s", containerName),
 		fmt.Sprintf("traefik.http.middlewares.remove-%s.stripprefix.prefixes", containerName): rm_mid,
-		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", containerName):       "3000",
+		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port", containerName):       port,
 	}
 
 	// Container configuration
@@ -406,11 +398,33 @@ func (app *App) handleCreateCode(c *gin.Context) {
 		})
 		return
 	}
-
 	log.Printf("Working path: %s", workingpath)
 
+	var dockerfile string
+	var port string
+	if output.codetype == "BACKEND" {
+		port = "3000"
+		// Define the Dockerfile
+		dockerfile = `
+FROM node:18
+WORKDIR /app
+COPY . .
+RUN npm install
+EXPOSE 3000
+CMD ["node", "./src/index.js"]`
+	} else {
+		port = "5173"
+		dockerfile = `
+	FROM node:18
+	WORKDIR /app
+	COPY . .
+	RUN npm install
+	CMD ["npm", "run","dev","--","--host"]`
+
+	}
+
 	// Build Docker image
-	imageName, err := app.createImage(workingpath)
+	imageName, err := app.createImage(workingpath, dockerfile)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to build Docker image: " + err.Error(),
@@ -421,7 +435,7 @@ func (app *App) handleCreateCode(c *gin.Context) {
 	log.Printf("Docker image created: %s", imageName)
 
 	// Launch the container
-	containerId, url, err := app.launchContainer(imageName)
+	containerId, url, err := app.launchContainer(imageName, port)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to launch container: " + err.Error(),
