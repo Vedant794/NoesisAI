@@ -1,1 +1,1 @@
-{"root":["./src/backendprompt.ts","./src/constants.ts","./src/frontendprompt.ts","./src/index.ts","./src/routes/comparision.ts","./src/starrer/constants.ts","./src/starrer/reacttemplate.ts"],"version":"5.7.3"}
+{"root":["./src/backendprompt.ts","./src/constants.ts","./src/frontendprompt.ts","./src/index.ts","./src/starrer/reacttemplate.ts"],"version":"5.7.3"}
