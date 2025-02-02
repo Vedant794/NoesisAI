@@ -4,6 +4,7 @@ import CodeEditor from "./CodeEditor";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { cleanResponse } from "./Helpers/Cleaner";
+import JSZip from "jszip";
 
 interface FileDataResponse {
   filepath: string;
@@ -50,13 +51,19 @@ function App() {
   async function init() {
     try {
       setLoading(true);
+      const template = await axios.post("http://localhost:3000/template", {
+        template: prompt,
+      });
+      console.log(template.data.message);
       const response = await axios.post("http://localhost:3000/chats", {
         messages: prompt,
+        template: template.data.message,
       });
       // console.log(response.data.Content);
-      const cleanJson = cleanResponse(response.data.Content);
+      let cleanJson = cleanResponse(response.data.Content);
       console.log(cleanJson);
       // const final = cleanJson.replace(/;/g, ";\\n");
+
       // console.log(final);
       setJson(JSON.parse(cleanJson));
       setJsonResponse(JSON.parse(cleanJson));
@@ -75,6 +82,31 @@ function App() {
 
   const handleFileSelect = (path: string, content: string) => {
     setSelectedFile({ path, content });
+  };
+
+  const handleDownload = async () => {
+    const zip = new JSZip();
+
+    // Add all files to the zip
+    jsonResponse.output.forEach((file) => {
+      const normalizedPath = file.filepath.replace(/^\//, "");
+      zip.file(normalizedPath, file.content);
+    });
+
+    // Generate the zip file
+    const content = await zip.generateAsync({ type: "blob" });
+
+    // Create download link
+    const url = window.URL.createObjectURL(content);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "Noesis-generation.zip";
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   };
 
   return (
@@ -223,6 +255,7 @@ function App() {
               <FileExplorer
                 files={jsonResponse.output}
                 onFileSelect={handleFileSelect}
+                downloadFile={handleDownload}
               />
             </div>
 

@@ -13,6 +13,7 @@
     "@monaco-editor/react": "^4.6.0",
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.9",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.473.0",
     "monaco-editor": "^0.52.2",
     "postcss": "^8.5.1",

@@ -1,5 +1,11 @@
 import React from "react";
-import { Folder, FileCode, ChevronRight, ChevronDown } from "lucide-react";
+import {
+  Folder,
+  FileCode,
+  ChevronRight,
+  ChevronDown,
+  Download,
+} from "lucide-react";
 
 type FileData = {
   filepath: string;
@@ -112,15 +118,24 @@ const FileTree: React.FC<FileTreeProps> = ({
 const FileExplorer: React.FC<{
   files: FileData[];
   onFileSelect: (path: string, content: string) => void;
-}> = ({ files, onFileSelect }) => {
+  downloadFile: () => void;
+}> = ({ files, onFileSelect, downloadFile }) => {
   const fileTree = pathsToTree(files);
 
   return (
     <div className="h-full bg-gray-900 rounded-lg shadow-sm overflow-y-auto">
-      <div className="p-3 border-b border-gray-700 bg-gray-800">
+      <div className="p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center">
         <h2 className="font-semibold text-sm text-gray-300">
           Project Explorer
         </h2>
+
+        <button
+          onClick={downloadFile}
+          className="p-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors duration-200"
+          title="Download Files"
+        >
+          <Download className="h-5 w-5" />
+        </button>
       </div>
       <div className="p-2">
         <FileTree files={fileTree} onFileSelect={onFileSelect} currentPath="" />
