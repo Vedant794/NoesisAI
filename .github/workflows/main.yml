@@ -1,25 +1,32 @@
 name: Deploy to Azure App Service
 
 on:
-  push: 
-    branches: 
-      - Backend
+  push:
+    branches:
+      - main
+    paths:
+      - 'Backend/**'  # Only trigger if changes are in the Backend folder
 
-jobs: 
+jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
         uses: actions/checkout@v3
+
       - name: Setup Node.js version
         uses: actions/setup-node@v4
         with: 
           node-version: '18.x'
+
       - name: Install Dependencies
-        run: npm install
+        run: |
+          cd Backend
+          npm install
+
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v2
         with:
           app-name: Noesis-node
           publish-profile: ${{ secrets.AZURE_PUBLIC_PROFILE }}
-          package: .
+          package: Backend  # Deploy only the Backend folder
