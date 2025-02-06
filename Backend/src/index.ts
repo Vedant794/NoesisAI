@@ -19,6 +19,15 @@ app.get("/",(req,res)=>{
   res.send("Yessss");
 });
 
+app.post("/api", (req, res) => {
+  try {
+    const text = req.body.text; // No need for await
+    res.send(text);
+  } catch (error) {
+    res.status(500).send({ error: "Something went wrong" });
+  }
+});
+
 app.post("/template", async (req, res) => {
   try {
     const template = req.body.template;
