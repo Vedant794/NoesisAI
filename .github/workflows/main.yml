@@ -24,11 +24,6 @@ jobs:
           cd Backend
           npm install
 
-      - name: Build the Project
-        run: |
-          cd Backend
-          npm run build  # Ensure this step creates the dist folder
-
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v2
         with:
