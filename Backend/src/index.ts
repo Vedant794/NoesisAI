@@ -15,6 +15,10 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 app.use(express.json());
 app.use(cors());
 
+app.get("/",(req,res)=>{
+  res.send("Yessss");
+});
+
 app.post("/template", async (req, res) => {
   try {
     const template = req.body.template;
