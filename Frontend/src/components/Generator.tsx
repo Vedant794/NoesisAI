@@ -35,7 +35,7 @@ function App() {
     try {
       setActive(true);
       const response = await axios.post(
-        "http://localhost:3000/generateurl",
+        "https://noesis-node-hkd0hdcme4dqbsdj.canadacentral-01.azurewebsites.net/generateurl",
         json
       );
       console.log(response.data);
@@ -51,14 +51,20 @@ function App() {
   async function init() {
     try {
       setLoading(true);
-      const template = await axios.post("http://localhost:3000/template", {
-        template: prompt,
-      });
+      const template = await axios.post(
+        "https://noesis-node-hkd0hdcme4dqbsdj.canadacentral-01.azurewebsites.net/template",
+        {
+          template: prompt,
+        }
+      );
       console.log(template.data.message);
-      const response = await axios.post("http://localhost:3000/chats", {
-        messages: prompt,
-        template: template.data.message,
-      });
+      const response = await axios.post(
+        "https://noesis-node-hkd0hdcme4dqbsdj.canadacentral-01.azurewebsites.net/chats",
+        {
+          messages: prompt,
+          template: template.data.message,
+        }
+      );
       // console.log(response.data.Content);
       let cleanJson = cleanResponse(response.data.Content);
       console.log(cleanJson);
