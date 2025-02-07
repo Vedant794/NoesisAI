@@ -67,7 +67,7 @@ function App() {
       );
       // console.log(response.data.Content);
       let cleanJson = cleanResponse(response.data.Content);
-      console.log(cleanJson);
+      // console.log(cleanJson);
       // const final = cleanJson.replace(/;/g, ";\\n");
 
       // console.log(final);
