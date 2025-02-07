@@ -19,7 +19,7 @@ function Home() {
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-100 mb-4">Noesis AI</h1>
             <p className="text-xl text-gray-300">
-              Build your Backend with the help of AI
+              Build your Website with the help of AI
             </p>
           </div>
 
@@ -35,7 +35,7 @@ function Home() {
                 type="submit"
                 className="w-full mt-4 bg-blue-600 text-gray-100 py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
-                Generate Backend Code
+                Generate Website Code
               </button>
             </div>
           </form>

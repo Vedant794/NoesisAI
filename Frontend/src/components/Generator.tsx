@@ -51,18 +51,18 @@ function App() {
   async function init() {
     try {
       setLoading(true);
-      const template = await axios.post(
-        "https://noesis-node-hkd0hdcme4dqbsdj.canadacentral-01.azurewebsites.net/template",
-        {
-          template: prompt,
-        }
-      );
-      console.log(template.data.message);
+      // const template = await axios.post(
+      //   "https://noesis-node-hkd0hdcme4dqbsdj.canadacentral-01.azurewebsites.net/template",
+      //   {
+      //     template: prompt,
+      //   }
+      // );
+      // console.log(template.data.message);
       const response = await axios.post(
         "https://noesis-node-hkd0hdcme4dqbsdj.canadacentral-01.azurewebsites.net/chats",
         {
           messages: prompt,
-          template: template.data.message,
+          template: "backend",
         }
       );
       // console.log(response.data.Content);
