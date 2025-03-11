@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import FileExplorer from "./FileExplorer";
-import CodeEditor from "./CodeEditor";
-import axios from "axios";
-import { useLocation } from "react-router-dom";
 import { cleanResponse } from "./Helpers/Cleaner";
+import axios from "axios";
 import JSZip from "jszip";
+import CodeEditor from "./CodeEditor";
+import FileExplorer from "./FileExplorer";
+import { TabView } from "./Helpers/TabView";
+import { PreviewFrame } from "./Helpers/PreviewFrame";
+import { useWebContainer } from "./Hooks/WebContainerUse";
 import { BACKEND_URL } from "../config";
+import { useLocation } from "react-router-dom";
 
 interface FileDataResponse {
   filepath: string;
@@ -16,42 +19,27 @@ interface jsonResponseType {
   output: FileDataResponse[];
 }
 
-function App() {
-  const location = useLocation();
-  const prompt = location.state?.prompt || "";
+function FrontendGenerator() {
   const [selectedFile, setSelectedFile] = useState<{
     path: string;
     content: string;
   } | null>(null);
+  const location = useLocation();
+  const prompt = location.state?.prompt || "";
   const [loading, setLoading] = useState(false);
-  const [url, setUrl] = useState<string>("");
-  const [json, setJson] = useState<jsonResponseType>();
-  const [active, setActive] = useState(false);
+  const [activeTab, setActiveTab] = useState<"code" | "preview">("code");
   const [jsonResponse, setJsonResponse] = useState<jsonResponseType>({
     output: [],
   });
   const [errorOccured, setErrorOccured] = useState(false);
-
-  async function generateTestingUrl() {
-    try {
-      setActive(true);
-      const response = await axios.post(`${BACKEND_URL}/generateurl`, json);
-      // console.log(response.data);
-      setActive(false);
-      setUrl(`20.40.54.7${response.data.url.message}`);
-      setErrorOccured(false);
-    } catch (error: any) {
-      setErrorOccured(true);
-      throw Error(`Takniki Kharabi hai thoda sabar karo: ${error}`);
-    }
-  }
+  const webcontainer = useWebContainer();
 
   async function init() {
     try {
       setLoading(true);
       const response = await axios.post(`${BACKEND_URL}/chats`, {
         messages: prompt,
-        template: "backend",
+        template: "frontend",
       });
       // console.log(response.data.Content);
       let cleanJson = cleanResponse(response.data.Content);
@@ -59,7 +47,6 @@ function App() {
       // const final = cleanJson.replace(/;/g, ";\\n");
 
       // console.log(final);
-      setJson(JSON.parse(cleanJson));
       setJsonResponse(JSON.parse(cleanJson));
       // console.log(jsonResponse);
       setLoading(false);
@@ -73,6 +60,34 @@ function App() {
   useEffect(() => {
     init();
   }, []);
+
+  //Webcontainer Logic Part
+
+  useEffect(() => {
+    if (!webcontainer) return;
+
+    const createMountStructure = (files: FileDataResponse[]) => {
+      const mountStructure: Record<string, any> = {};
+      files.forEach(({ filepath, content }) => {
+        const pathSegments = filepath.split("/").filter(Boolean);
+        let current = mountStructure;
+
+        pathSegments.forEach((segment, index) => {
+          if (!current[segment]) {
+            current[segment] =
+              index === pathSegments.length - 1
+                ? { file: { contents: content } }
+                : { directory: {} };
+          }
+          current = current[segment].directory || current[segment];
+        });
+      });
+      return mountStructure;
+    };
+
+    const mountStructure = createMountStructure(jsonResponse.output);
+    webcontainer.mount(mountStructure);
+  }, [jsonResponse.output, webcontainer]);
 
   const handleFileSelect = (path: string, content: string) => {
     setSelectedFile({ path, content });
@@ -152,33 +167,6 @@ function App() {
 
               <div className="bg-gray-900 p-4 rounded-lg shadow-lg border border-gray-700">
                 <h3 className="text-sm font-medium text-gray-300 mb-2">
-                  File Types
-                </h3>
-                <div className="space-y-2">
-                  {Object.entries(
-                    jsonResponse.output.reduce((acc, file) => {
-                      const ext = file.filepath.split(".").pop() || "unknown";
-                      acc[ext] = (acc[ext] || 0) + 1;
-                      return acc;
-                    }, {} as Record<string, number>)
-                  ).map(([ext, count]) => (
-                    <div
-                      key={ext}
-                      className="flex justify-between items-center"
-                    >
-                      <span className="text-sm text-gray-400">
-                        .{ext} files
-                      </span>
-                      <span className="text-sm font-medium text-blue-400">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-gray-900 p-4 rounded-lg shadow-lg border border-gray-700">
-                <h3 className="text-sm font-medium text-gray-300 mb-2">
                   Recent Changes
                 </h3>
                 <div className="space-y-2">
@@ -193,55 +181,7 @@ function App() {
                 </div>
               </div>
             </div>
-            <div className="ouputSection mt-3 text-center">
-              {url.length > 0 ? (
-                <div>
-                  <span className="text-sm text-slate-100 font-serif">
-                    {url}
-                  </span>
-                  <h1 className="text-sm text-red-400 font-mono mt-2">
-                    **Look this url only valid for 5 min so test the code
-                    urgently**
-                  </h1>
-                  <button
-                    className="text-white rounded-lg bg-blue-500 ml-5 hover:bg-blue-700 px-4 py-2 h-[5vh] w[50%] text-sm mt-4 font-mono"
-                    onClick={async () =>
-                      await navigator.clipboard.writeText(url)
-                    }
-                  >
-                    Copy Url
-                  </button>
-                </div>
-              ) : (
-                <></>
-              )}
-              {active ? (
-                <>
-                  <h1 className="text-lg font-mono text-white">Loading.....</h1>
-                  {errorOccured ? (
-                    <h1 className="text-lg text-white text-center">
-                      Some Server Error Occured Please refresh the page
-                    </h1>
-                  ) : (
-                    <></>
-                  )}
-                </>
-              ) : (
-                <></>
-              )}
-              <button
-                className={`h-[6vh] w-[80%] mt-5 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-700 text-slate-100 disabled:${
-                  url.length > 0
-                }`}
-                onClick={() => {
-                  generateTestingUrl();
-                }}
-              >
-                Generate Url to test the Api
-              </button>
-            </div>
           </div>
-
           {/* Right panel - Horizontal layout */}
           <div className="w-[70%] h-full flex bg-gray-900">
             {/* Explorer section */}
@@ -254,11 +194,21 @@ function App() {
             </div>
 
             {/* Code panel section */}
-            <div className="w-2/3">
-              <CodeEditor
-                filePath={selectedFile?.path}
-                content={selectedFile?.content}
-              />
+            <div className="w-2/3 h-[100%] col-span-2 bg-gray-900 rounded-lg shadow-lg mt-2">
+              <TabView activeTab={activeTab} onTabChange={setActiveTab} />
+              <div className="h-[calc(100%-4rem)]">
+                {activeTab === "code" ? (
+                  <CodeEditor
+                    filePath={selectedFile?.path}
+                    content={selectedFile?.content}
+                  />
+                ) : (
+                  <PreviewFrame
+                    files={jsonResponse.output}
+                    webContainer={webcontainer}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </>
@@ -267,4 +217,4 @@ function App() {
   );
 }
 
-export default App;
+export default FrontendGenerator;

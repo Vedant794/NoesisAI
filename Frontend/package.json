@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.6.0",
+    "@webcontainer/api": "^1.5.1-internal.8",
     "autoprefixer": "^10.4.20",
     "axios": "^1.7.9",
     "jszip": "^3.10.1",
