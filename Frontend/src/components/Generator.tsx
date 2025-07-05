@@ -35,7 +35,7 @@ function App() {
     try {
       setActive(true);
       const response = await axios.post(
-        "https://noesis-node-hkd0hdcme4dqbsdj.canadacentral-01.azurewebsites.net/generateurl",
+        "https://noesisai.onrender.com/generateurl",
         json
       );
       console.log(response.data);
@@ -59,7 +59,7 @@ function App() {
       // );
       // console.log(template.data.message);
       const response = await axios.post(
-        "https://noesis-node-hkd0hdcme4dqbsdj.canadacentral-01.azurewebsites.net/chats",
+        "https://noesisai.onrender.com/chats",
         {
           messages: prompt,
           template: "backend",
