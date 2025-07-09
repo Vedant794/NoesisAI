@@ -10,6 +10,8 @@ import OpenAI from "openai";
 const app = express();
 const openai = new OpenAI({ apiKey: process.env.OPEN_API_KEY });
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const Backend_url = process.env.GO_BACKEND_URL; // e.g. "http://3.110.143.214"
+const Base_port = process.env.BASE_PORT; 
 // const
 
 app.use(express.json());
@@ -65,7 +67,7 @@ app.post("/generateurl", async (req, res) => {
     // res.json(parseLlmResponse);
     // console.log(parseLlmResponse);
     const generatedUrl = await axios.post(
-      "http://20.40.54.7:9000/create-code",
+      `${Backend_url}${Base_port}/create-code`,
       parseLlmResponse
     );
 
@@ -77,7 +79,7 @@ app.post("/generateurl", async (req, res) => {
     // console.log(generatedUrl);
     console.log(4);
 
-    res.status(201).json({ url: generatedUrl.data });
+    res.status(201).json({ url: Backend_url+generatedUrl.data });
   } catch (error: any) {
     res.status(500).json({ Message: error });
   }
