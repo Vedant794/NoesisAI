@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo
+    container_name: mongodb
+    networks:
+      - trafiektest_default
+
+  app:
+    image: node
+    container_name: app
+    networks:
+      - trafiektest_default
+
+networks:
+  trafiektest_default:
+    external: true  # Only if this network already exists
