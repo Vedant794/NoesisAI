@@ -40,7 +40,7 @@ function App() {
       );
       console.log(response.data);
       setActive(false);
-      setUrl(`20.40.54.7${response.data.url.message}`);
+      setUrl(`${response.data.url}`);
       setErrorOccured(false);
     } catch (error: any) {
       setErrorOccured(true);
