@@ -74,12 +74,13 @@ app.post("/generateurl", async (req, res) => {
     console.log(3);
     if (generatedUrl.data.error) {
       res.status(500).json({ Message: generatedUrl.data.error });
+      return
     }
-
+    console.log(generatedUrl.data.message)
     // console.log(generatedUrl);
-    console.log(4);
+    console.log(4); 
 
-    res.status(201).json({ url: Backend_url+generatedUrl.data });
+    res.status(201).json({ url: Backend_url+generatedUrl.data.message });
   } catch (error: any) {
     res.status(500).json({ Message: error });
   }
