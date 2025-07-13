@@ -9,7 +9,7 @@ import ModalCard from "./ModelCard";
 
 
 
-const BASE_URL = "http://localhost:8080";
+const BASE_URL = "https://noesisbackend-efcbdbe6ffgegfcf.centralindia-01.azurewebsites.net";
 
 
 interface FileDataResponse {
