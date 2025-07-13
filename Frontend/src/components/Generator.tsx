@@ -7,10 +7,8 @@ import { cleanResponse } from "./Helpers/Cleaner";
 import JSZip from "jszip";
 import ModalCard from "./ModelCard";
 
-
-
-const BASE_URL = "https://noesisbackend-efcbdbe6ffgegfcf.centralindia-01.azurewebsites.net";
-
+const BASE_URL =
+  "https://noesisbackend-efcbdbe6ffgegfcf.centralindia-01.azurewebsites.net";
 
 interface FileDataResponse {
   filepath: string;
@@ -37,7 +35,7 @@ function App() {
   });
   const [errorOccured, setErrorOccured] = useState(false);
   const [showHowToUse, setShowHowToUse] = useState(false); // modal trigger
-  
+
   async function generateTestingUrl() {
     try {
       setActive(true);
@@ -54,7 +52,7 @@ function App() {
   async function init() {
     try {
       setLoading(true);
-      const response = await axios.post(BASE_URL+"/chats", {
+      const response = await axios.post(BASE_URL + "/chats", {
         messages: prompt,
         template: "backend",
       });
@@ -95,27 +93,40 @@ function App() {
   };
 
   return (
-  <div className="h-screen flex bg-gray-900 relative">
-
+    <div className="h-screen flex bg-gray-900 relative">
       {loading ? (
-        <>
-          <h1 className="text-lg text-white text-center">Wait.....</h1>
-          {errorOccured && (
-            <h1 className="text-lg text-white text-center">
-              Some Server Error Occurred. Please refresh the page.
-            </h1>
-          )}
-        </>
+        <div className="flex items-center justify-center w-full h-full">
+          <div className="flex flex-col items-center justify-center gap-4">
+            {/* Spinner */}
+            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+
+            {/* Loading Text */}
+            <p className="text-white text-lg font-medium animate-pulse">
+              Loading, please wait...
+            </p>
+
+            {/* Optional Error Message */}
+            {errorOccured && (
+              <p className="text-red-400 text-sm text-center max-w-md">
+                ⚠️ Some server error occurred. Please try refreshing the page.
+              </p>
+            )}
+          </div>
+        </div>
       ) : (
         <>
           {/* Left panel */}
           <div className="w-[30%] h-full p-4 bg-gray-800 border-r border-gray-700">
-            <h2 className="text-lg font-semibold mb-4 text-gray-100">Project Status</h2>
+            <h2 className="text-lg font-semibold mb-4 text-gray-100">
+              Project Status
+            </h2>
 
             <div className="space-y-4">
               {/* Project Structure */}
               <div className="bg-gray-900 p-4 rounded-lg shadow-lg border border-gray-700">
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Project Structure</h3>
+                <h3 className="text-sm font-medium text-gray-300 mb-2">
+                  Project Structure
+                </h3>
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="text-3xl font-bold text-blue-400">
@@ -140,7 +151,9 @@ function App() {
 
               {/* File Types */}
               <div className="bg-gray-900 p-4 rounded-lg shadow-lg border border-gray-700">
-                <h3 className="text-sm font-medium text-gray-300 mb-2">File Types</h3>
+                <h3 className="text-sm font-medium text-gray-300 mb-2">
+                  File Types
+                </h3>
                 <div className="space-y-2">
                   {Object.entries(
                     jsonResponse.output.reduce((acc, file) => {
@@ -149,9 +162,16 @@ function App() {
                       return acc;
                     }, {} as Record<string, number>)
                   ).map(([ext, count]) => (
-                    <div key={ext} className="flex justify-between items-center">
-                      <span className="text-sm text-gray-400">.{ext} files</span>
-                      <span className="text-sm font-medium text-blue-400">{count}</span>
+                    <div
+                      key={ext}
+                      className="flex justify-between items-center"
+                    >
+                      <span className="text-sm text-gray-400">
+                        .{ext} files
+                      </span>
+                      <span className="text-sm font-medium text-blue-400">
+                        {count}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -172,13 +192,17 @@ function App() {
             <div className="ouputSection mt-3 text-center">
               {url.length > 0 && (
                 <div>
-                  <span className="text-sm text-slate-100 font-serif">{url}</span>
+                  <span className="text-sm text-slate-100 font-serif">
+                    {url}
+                  </span>
                   <h1 className="text-sm text-red-400 font-mono mt-2">
                     ** This URL is valid for 5 minutes. Test quickly! **
                   </h1>
                   <button
                     className="text-white rounded-lg bg-blue-500 ml-5 hover:bg-blue-700 px-4 py-2 mt-4 font-mono text-sm"
-                    onClick={async () => await navigator.clipboard.writeText(url)}
+                    onClick={async () =>
+                      await navigator.clipboard.writeText(url)
+                    }
                   >
                     Copy Url
                   </button>
@@ -189,7 +213,9 @@ function App() {
                 <h1 className="text-lg font-mono text-white mt-2">
                   Loading...
                   {errorOccured && (
-                    <p className="text-sm text-red-400">Error occurred. Try again later.</p>
+                    <p className="text-sm text-red-400">
+                      Error occurred. Try again later.
+                    </p>
                   )}
                 </h1>
               )}
