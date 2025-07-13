@@ -1,4 +1,3 @@
-import React from "react";
 import { X, AlertTriangle, Wrench, Construction, Heart } from "lucide-react";
 
 interface ModalCardProps {
@@ -46,7 +45,6 @@ const ModalCard: React.FC<ModalCardProps> = ({ show, onClose }) => {
               button. It will give you a temporary URL to test the generated backend APIs.
             </p>
 
-            {/* Warning Section */}
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 flex items-start gap-3">
               <AlertTriangle className="text-amber-400 mt-0.5 flex-shrink-0" size={18} />
               <div>
@@ -66,7 +64,6 @@ const ModalCard: React.FC<ModalCardProps> = ({ show, onClose }) => {
               ) based on the generated code to make actual API requests. We're working on improving this experience.
             </p>
 
-            {/* URL Example Section */}
             <div className="bg-gray-800/50 border border-gray-600 rounded-lg p-4">
               <p className="text-gray-200 font-medium mb-3 flex items-center gap-2">
                 <span className="w-2 h-2 bg-green-400 rounded-full"></span>
@@ -91,7 +88,7 @@ const ModalCard: React.FC<ModalCardProps> = ({ show, onClose }) => {
                 </div>
               </div>
             </div>
-            {/* Feature Updates */}
+
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 flex items-start gap-3">
               <Wrench className="text-blue-400 mt-0.5 flex-shrink-0" size={18} />
               <div>
@@ -102,7 +99,6 @@ const ModalCard: React.FC<ModalCardProps> = ({ show, onClose }) => {
               </div>
             </div>
 
-            {/* Development Status */}
             <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 flex items-start gap-3">
               <Construction className="text-purple-400 mt-0.5 flex-shrink-0" size={18} />
               <div>
@@ -119,7 +115,6 @@ const ModalCard: React.FC<ModalCardProps> = ({ show, onClose }) => {
               We hope you find this platform useful!
             </p>
 
-            {/* Call to Action */}
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-start gap-3">
               <Heart className="text-green-400 mt-0.5 flex-shrink-0" size={18} />
               <div>
@@ -132,23 +127,6 @@ const ModalCard: React.FC<ModalCardProps> = ({ show, onClose }) => {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(75, 85, 99, 0.3);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(156, 163, 175, 0.5);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(156, 163, 175, 0.7);
-        }
-      `}</style>
     </div>
   );
 };
